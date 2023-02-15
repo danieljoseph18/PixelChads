@@ -4,12 +4,13 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @custom:security-contact contact@altify.io
-contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Ownable {
+contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
@@ -20,9 +21,8 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Ownable {
 
     uint256 public immutable maxSupply = 500;
     uint256 public collectionRoyaltyAmount = 100; // 10%
-    ///Make Variables Private in Production
-    string public contractURI;
-    string public baseURI;
+    string private contractURI;
+    string private baseURI;
     
     address public paymentReceiver;
     mapping(uint256 => bool) tokenHasUpdated;
@@ -35,13 +35,14 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Ownable {
         baseURI = _startingBaseURI;
     }
 
+    //Fallback function incase someone sends tokens to the contract
     receive() external payable {}
 
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
 
-    function safeMint() public {
+    function safeMint() public whenNotPaused {
         require(_tokenIdCounter.current() < maxSupply, "Max supply reached");
         uint256 tokenId = _tokenIdCounter.current();
         string memory uri = string(abi.encodePacked(tokenId.toString(), ".json"));
@@ -71,13 +72,17 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Ownable {
         contractURI = _contractURI;
     }
 
-    function withdraw() public onlyOwner {
+    function withdraw() public onlyOwner whenNotPaused {
         uint256 balance = address(this).balance;
         payable(paymentReceiver).transfer(balance);
     }
 
-    function getCurrentTokenId() public view returns (uint256) {
-        return _tokenIdCounter.current();
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     // The following functions are overrides required by Solidity.
