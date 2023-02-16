@@ -38,10 +38,7 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     //Fallback function incase someone sends tokens to the contract
     receive() external payable {}
 
-    function _baseURI() internal view override returns (string memory) {
-        return baseURI;
-    }
-
+    ///Mint Function
     function safeMint() public whenNotPaused {
         require(_tokenIdCounter.current() < maxSupply, "Max supply reached");
         uint256 tokenId = _tokenIdCounter.current();
@@ -52,6 +49,7 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
         _setTokenURI(tokenId, uri);
     }
 
+    //Updates the token URI for an individual Token ID
     function updateTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
         require(_exists(tokenId), "Token does not exist");
         require(tokenHasUpdated[tokenId] == false, "Token URI already updated");
@@ -64,26 +62,37 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
         _setTokenURI(tokenId, uri);
     }
 
+    ///Changes payment receiver for royalties & withdrawals
     function updatePaymentReceiver(address _paymentReceiver) public onlyOwner {
         paymentReceiver =  _paymentReceiver;
     }
 
+    ///Sets the contract URI denoting key info like royalties
     function updateContractURI(string memory _contractURI) public onlyOwner {
         contractURI = _contractURI;
     }
 
+    //Withdraws funds accidentally sent to the contract
     function withdraw() public onlyOwner whenNotPaused {
         uint256 balance = address(this).balance;
         payable(paymentReceiver).transfer(balance);
     }
 
+    ///Pauses minting and withdrawal
     function pause() public onlyOwner {
         _pause();
     }
 
+    ///Unpauses minting and withdrawal
     function unpause() public onlyOwner {
         _unpause();
     }
+
+    //Returns the current baseURI
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
+
 
     // The following functions are overrides required by Solidity.
 
@@ -108,7 +117,7 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     }
 
 
-    //--------------------------------------------- ERC721 URI Storage Function Overrides --------------------------------------------
+    ///ERC721 URI Storage Function Override to allow for dynamic tokenURI
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
 
@@ -127,12 +136,11 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
         return super.tokenURI(tokenId);
     }
 
+    ///Updates individual tokenURI
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal {
         require(_exists(tokenId), "ERC721URIStorage: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
-
-    //--------------------------------------------------------------------------------------------------------------------
 
     /// IERC2981 Royalty Enforcement
     function royaltyInfo(uint256 , uint256 salePrice)
@@ -145,5 +153,6 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
         // return the amount of royalties and the recipient collection address
         return (paymentReceiver, _royaltyAmount);
     }
+
 
 }
