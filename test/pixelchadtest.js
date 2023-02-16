@@ -35,6 +35,22 @@ contract("PixelChads", async accounts => {
     });
 
     //Test 3 -> Passed
+    it("Shouldn't allow minting while paused", async () => {
+        await contract.pause();
+        try {
+            await contract.safeMint({ from: owner });
+            assert.fail("able to mint token while paused");
+        } catch (error) {
+            assert.include(
+            error.message,
+            "Pausable: paused",
+            "error message not thrown correctly"
+            );
+        }
+        await contract.unpause();
+    });
+
+    //Test 4 -> Passed
     it("should not be able to mint new token when max supply reached", async () => {
         for (let i = 0; i < maxSupply; i++) {
             await contract.safeMint({ from: owner });
@@ -52,7 +68,7 @@ contract("PixelChads", async accounts => {
         }
     });
 
-    //Test 4 -> Passed
+    //Test 5 -> Passed
     it("should be able to update token URI", async () => {
         const tokenId = await contract.getCurrentTokenId();
         await contract.safeMint({ from: owner });
@@ -64,7 +80,7 @@ contract("PixelChads", async accounts => {
         assert.equal(tokenURI, uri, "token URI not set correctly");
     });
 
-    //Test 5 -> Passed
+    //Test 6 -> Passed
     it("should not be able to update token URI if token does not exist", async () => {
         const tokenId = 123456;
         const uri = "https://pixelchads.com/tokens/1.json";
@@ -81,7 +97,7 @@ contract("PixelChads", async accounts => {
         }
     });
 
-    //Test 6 -> Passed
+    //Test 7 -> Passed
     it("should not be able to update token URI if URI already updated", async () => {
         const tokenId = await contract.getCurrentTokenId();
         await contract.safeMint({ from: owner });
@@ -101,7 +117,7 @@ contract("PixelChads", async accounts => {
         }
     });
 
-    //Test 7 -> Passed
+    //Test 8 -> Passed
     it("should be able to update payment receiver", async () => {
         await contract.updatePaymentReceiver(paymentReceiver, { from: owner });
         const updatedPaymentReceiver = await contract.paymentReceiver();
@@ -113,7 +129,7 @@ contract("PixelChads", async accounts => {
         );
     });
 
-    //Test 8 -> Passed
+    //Test 9 -> Passed
     it("should be able to set contract URI", async () => {
         const newContractURI = "https://newpixelchads.com/";
         await contract.updateContractURI(newContractURI, { from: owner });
@@ -126,7 +142,7 @@ contract("PixelChads", async accounts => {
         );
     });
 
-    //Test 9 -> Failing but Functionality 100% working
+    //Test 10 -> Failing but Functionality 100% working
     it("should be able to withdraw balance", async () => {
         const initialOwnerBalance = await web3.eth.getBalance(owner);
         const contractBalance = await web3.eth.getBalance(contract.address);
@@ -144,7 +160,7 @@ contract("PixelChads", async accounts => {
         assert.equal(updatedOwnerBalance.toString(), (initialOwnerBalance + contractBalance - gasCost).toString(), "owner balance not updated correctly");
     });
 
-    //Test 10 -> Passed
+    //Test 11 -> Passed
     it("should not be able to withdraw balance by non-owner", async () => {
         const initialOwnerBalance = await web3.eth.getBalance(owner);
         const contractBalance = await web3.eth.getBalance(contract.address);
@@ -175,7 +191,7 @@ contract("PixelChads", async accounts => {
         );
     });
 
-    //Test 11 -> Passed
+    //Test 12 -> Passed
     it("should return correct royalty information", async () => {
         const salePrice = 1000;
         const expectedRoyaltyAmount = (salePrice * collectionRoyaltyAmount) / 1000;
