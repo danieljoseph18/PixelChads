@@ -50,7 +50,26 @@ contract("PixelChads", async accounts => {
         await contract.unpause();
     });
 
-    //Test 4 -> Passed
+    it("Shouldn't allow people to mint more than 3 tokens", async () => {
+        await contract.unpause();
+        let balance = await contract.balanceOf(accounts[1]);
+        while(balance < 3){
+            await contract.safeMint({ from: accounts[1] });
+            balance = await contract.balanceOf(accounts[1]);
+        }
+        try {
+            await contract.safeMint({ from: accounts[1] });
+            assert.fail("able to mint more than 3 tokens");
+        } catch (error) {
+            assert.include(
+            error.message,
+            "Max mint reached",
+            "error message not thrown correctly"
+            );
+        }
+    });
+
+    //Test 4 -> Passed (pre adding Max Mint)
     it("should not be able to mint new token when max supply reached", async () => {
         for (let i = 0; i < maxSupply; i++) {
             await contract.safeMint({ from: owner });

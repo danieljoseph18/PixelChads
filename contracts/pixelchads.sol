@@ -21,12 +21,14 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
 
     uint256 public immutable maxSupply = 500;
     uint256 public collectionRoyaltyAmount = 100; // 10%
+    uint256 public constant maxMint = 3;
     string private contractURI;
     string private baseURI;
     
     address public paymentReceiver;
-    mapping(uint256 => bool) tokenHasUpdated;
     mapping(uint256 => string) private _tokenURIs;
+    mapping(address => uint256) public mintedTokens;
+
 
     constructor(string memory _contractURI, string memory _startingBaseURI) ERC721("PixelChads", "CHAD") {
         //Contract URI links to JSON file containing information about the contract (royalties etc.)
@@ -41,9 +43,11 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     ///Mint Function
     function safeMint() public whenNotPaused {
         require(_tokenIdCounter.current() < maxSupply, "Max supply reached");
+        require(mintedTokens[msg.sender] < maxMint, "Mint limit reached");
         uint256 tokenId = _tokenIdCounter.current();
         string memory uri = string(abi.encodePacked(tokenId.toString(), ".json"));
         _tokenIdCounter.increment();
+        mintedTokens[msg.sender]++;
         emit tokenMinted(msg.sender, tokenId);
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
@@ -52,12 +56,9 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     //Updates the token URI for an individual Token ID
     function updateTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
         require(_exists(tokenId), "Token does not exist");
-        require(tokenHasUpdated[tokenId] == false, "Token URI already updated");
-        tokenHasUpdated[tokenId] = true;
         emit tokenUpdated(tokenId);
 
         delete _tokenURIs[tokenId];
-        
         
         _setTokenURI(tokenId, uri);
     }
@@ -92,7 +93,6 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
-
 
     // The following functions are overrides required by Solidity.
 
