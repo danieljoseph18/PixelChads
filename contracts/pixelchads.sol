@@ -20,7 +20,7 @@ contract PixelChads is ERC721, ERC721Enumerable, IERC2981, Pausable, Ownable {
     event tokenUpdated(uint256 indexed tokenId);
 
     uint256 public immutable maxSupply = 500;
-    uint256 public collectionRoyaltyAmount = 100; // 10%
+    uint256 public collectionRoyaltyAmount = 50; // 5%
     uint256 public constant maxMint = 3;
     string private contractURI;
     string private baseURI;
